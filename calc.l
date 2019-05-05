@@ -58,12 +58,12 @@ NoID		({DIGITO}|{NUMERO}|{REAL}|{EXPONENTE}){ID}
 			}
 			return ID;
 		}
-";"		{ printf("!"); fprintf(yyout, " END\n "); return END; }
+";"		{ printf("!"); fprintf(yyout, " END"); return END; }
 ","		{ fprintf(yyout, "coma= , "); }
 ":"		{ fprintf(yyout, "punto-punto= : "); }
 "\."		{ fprintf(yyout, "punto= ."); }
 [ ]		;
-"\n"		{ printf("KELLY\n"); fprintf(yyout, "\n"); ++_lineno; return NEXT_LINE; }
+"\n"		{ printf("KELLY\n"); fprintf(yyout, "\n"); ++_lineno; /*return NEXT_LINE;*/ }
 "\t"		{ fprintf(yyout, "\t"); }
 .		{ 
 			char str[12];
