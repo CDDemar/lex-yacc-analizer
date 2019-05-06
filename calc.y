@@ -21,43 +21,63 @@
 %token MOD
 %token POWER
 
-//LINE TOKENS
-%token NEXT_LINE
+//UTIL TOKENS
+%token JUMP
 %token END
+%token E_O_F
+
+//ERROR TOKENS
+%token L_ERROR
 
 //INITIAL PROD:
 %start INIT
 
 %%
 
-INIT:
-	ID ASSIGN INTEGER OPTIONAL_OPS END OPTIONAL_LINES|
-	ID ASSIGN FLOAT OPTIONAL_OPS END OPTIONAL_LINES|
-	ID ASSIGN ID OPTIONAL_OPS END OPTIONAL_LINES
-;
+INIT	: ID_E ASSIGN INIT_P END_ANALIZER 
+	| error ASSIGN INIT_P END_ANALIZER
+	| ID_E error ASSIGN INIT_P END_ANALIZER
+	| ID_E error INIT_P END_ANALIZER
+	| ID_E ASSIGN error INIT_P END_ANALIZER 
+	;
 
-OPTIONAL_LINES: 
-	ID ASSIGN INTEGER OPTIONAL_OPS END OPTIONAL_LINES|
-	ID ASSIGN FLOAT OPTIONAL_OPS END OPTIONAL_LINES|
-	ID ASSIGN ID OPTIONAL_OPS END OPTIONAL_LINES |
-	/*EMPTY CHAR */
-;
+ID_E 	: ID
+	| L_ERROR { fprintf(stdout, "Error in line %d\n", (lines_c)); }
+	;
 
-OPTIONAL_OPS:
-	ACTION INTEGER OPTIONAL_OPS | 
-	ACTION FLOAT OPTIONAL_OPS | 
-	ACTION ID OPTIONAL_OPS |
-	/* EMPTY CHAR */
-;
+ASSIGN_E : ASSIGN
+	 | error { fprintf(stdout, "Error in line %d\n", (lines_c)); }
+	 ;
 
-ACTION:
-	ADD |
-	SUBTRACTION |
-	MULTIPLICATION |
-	DIVISION |
-	MOD |
-	POWER
-;
+END_ANALIZER: E_O_F { exit(1); }
+
+INIT_P: VAL OPT_OPS END LN_JUMPS OPT_LNS;
+
+LN_JUMPS	: /* EMPTY CHAR */
+		| JUMP LN_JUMPS { lines_c++; }
+		;
+
+VAL 	: ID
+	| INTEGER
+	| FLOAT
+	;
+
+
+OPT_OPS : OP VAL OPT_OPS
+	| /* EMPTY CHAR */
+	;
+
+OP	: ADD
+	| SUBTRACTION
+	| MULTIPLICATION
+	| DIVISION
+	| POWER
+	| MOD 
+	;
+
+OPT_LNS : ID_E ASSIGN_E INIT_P OPT_LNS
+	| /* EMPTY CHAR */
+	;
 
 %% 
 
@@ -68,21 +88,24 @@ extern FILE *yyout;
 extern int yylineno;
 
 void yyerror(char *s) {
-  fprintf(stdout, "Error in line %d: %s\n", (yylineno-1), s);
+	fprintf(stdout, "Error in line %d: %s\n", (yylineno), s);
 }
 
 int main(int argc, char *argv[]) {
 	printf("Input: %s\n", argv[1]);
 	FILE *fp = fopen(argv[1], "r");
-	FILE *out_file = fopen("salida_lex.txt", "w"); // write only
+	FILE *lex_out_file = fopen("salida_lex.txt", "w"); // write only
+	//FILE *yacc_out_file = open("salida_yacc.txt", "w"); // write only 
 	if (!fp) {
-		fprintf(out_file,"\nNo se encuentra el archivo...\n");
+		fprintf(lex_out_file,"\nNo se encuentra el archivo...\n");
+		//fprintf(yacc_out_file,"\nNo se encuentra el archivo...\n");
 		return(-1);
 	}
 	yyin = fp;
-	yyout = out_file;
+	yyout = lex_out_file;
 	yyparse();
-	fclose(out_file);
+	fclose(lex_out_file);
 	fclose(fp);
+	//fclose(yacc_out_file);
 	return(0);
 }

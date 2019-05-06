@@ -17,7 +17,7 @@ DIGITO		[0-9]
 LETRA		[a-zA-Z]
 ALFA		{LETRA}|{DIGITO}
 NUMERO		-?{DIGITO}+
-EXPONENTE	[eE][+-]{NUMERO}
+EXPONENTE	[eE][-+]{NUMERO}
 REAL		{NUMERO}(.{NUMERO}{EXPONENTE}?)?
 ID		{LETRA}{ALFA}*
 NoID		({DIGITO}|{NUMERO}|{REAL}|{EXPONENTE}){ID}
@@ -35,12 +35,14 @@ NoID		({DIGITO}|{NUMERO}|{REAL}|{EXPONENTE}){ID}
 			strcat(errs, result);
 			err_count++;		
 			++_lineno; 
+			fprintf(yyout, " L_ERROR ");
+			return L_ERROR;
 				
 		}
-{NUMERO}	{ fprintf(yyout, " INTEGER "); return INTEGER; }
-{REAL}		{ fprintf(yyout, "cte-real= %s ", yytext); return FLOAT; }
-"="		{ fprintf(yyout, " ASSIGN "); return ASSIGN; }
-"+" 		{ fprintf(yyout, " ADD "); return ADD; }
+{NUMERO}	{ fprintf(yyout, " %s ", yytext); return INTEGER; }
+{REAL}		{ fprintf(yyout, " %s ", yytext); return FLOAT; }
+"="		{ fprintf(yyout, " = "); return ASSIGN; }
+"+" 		{ fprintf(yyout, " + "); return ADD; }
 "-" 		{ fprintf(yyout, "op-sust= - "); return SUBTRACTION; }
 "*" 		{ fprintf(yyout, "op-mult= * "); return MULTIPLICATION; }
 "/" 		{ fprintf(yyout, "op-div= / "); return DIVISION; }
@@ -58,13 +60,14 @@ NoID		({DIGITO}|{NUMERO}|{REAL}|{EXPONENTE}){ID}
 			}
 			return ID;
 		}
-";"		{ printf("!"); fprintf(yyout, " END"); return END; }
+";"		{ printf("!"); fprintf(yyout, " ; "); return END; }
 ","		{ fprintf(yyout, "coma= , "); }
 ":"		{ fprintf(yyout, "punto-punto= : "); }
 "\."		{ fprintf(yyout, "punto= ."); }
 [ ]		;
-"\n"		{ printf("KELLY\n"); fprintf(yyout, "\n"); ++_lineno; /*return NEXT_LINE;*/ }
+"\n"		{ printf("?\n"); fprintf(yyout, " JUMP\n"); ++_lineno; return JUMP; }
 "\t"		{ fprintf(yyout, "\t"); }
+<<EOF>>		{ fprintf(yyout, " E_O_F "); return E_O_F; }
 .		{ 
 			char str[12];
 			sprintf(str, "%d", _lineno);
